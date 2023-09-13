@@ -13,11 +13,6 @@ data = pandas.read_csv(file)  # imports the odds of different tribes from a csv
 tile_names = ["ef", "fo", "gf", "mo", "mm", "ff", "cf"]
 
 
-def resources():  # Prints out all the tile names and their shortform abbreviations
-    print("mo : mountain \n", "fo : forest \n", "ff : fruit/field\n", "cf : crop/field\n",
-          "ef : empty field\n", "gf : game/forest\n", "mm : metal/mountain")
-
-
 class tribe:
     def __init__(self, mo, fo, ef, ff, cf, gf, mm, mof, fof, eff, fff, cff, gff, mmf, moo, foo, efo, ffo, cfo, gfo,
                  mmo):
