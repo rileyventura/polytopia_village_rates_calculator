@@ -10,7 +10,6 @@ import numpy as np
 file = "/home/jack/Downloads/poly_rates.csv"  # change name for the file directory
 data = pandas.read_csv(file)  # imports the odds of different tribes from a csv
 
-tile_names = ["ef", "fo", "gf", "mo", "mm", "ff", "cf"]
 
 
 class tribe:
@@ -39,6 +38,13 @@ class tribe:
         self.mmo = mmo
 
 
+def valid_tile_name(tile):
+    valid_tiles = ["mo", "fo", "ef", "ff", "cf", "gf", "mm", "mof", "fof", "eff", "fff", "cff", "gff", "mmf"]
+    if tile in valid_tiles:
+        return True
+    return False
+
+
 def input_tribe():  # Asks for user input, returns the tribe after data validating
     valid_tribes = ["h", "x", "i", "b", "o", "q", "ai", "aq", "v", "k", "c", "z", "l", "e", "y"]
 
@@ -61,7 +67,7 @@ def input_tile():  # Asks for user input, returns the tiles inputted and their p
 
     global tile_shape
     tile_shape = []
-    n_tiles = 0  # These check that the shape is ok and matches the length of the list of tiles
+    # These check that the shape is ok and matches the length of the list of tiles
 
     global tile_distribution
     global tile_distribution_names
@@ -111,7 +117,7 @@ def input_tile():  # Asks for user input, returns the tiles inputted and their p
                     direction = "right"
                 elif direction == "left":
                     direction = "forwards"
-        n_tiles = tile_number()
+        tile_number()
         print(tile_shape, n_tiles, tile_distribution)
         print(any(x in tile_input_string for x in points), [i for i in tile_input_list if
                                                             i not in valid_tiles] != [], len(tile_shape) != n_tiles)
@@ -188,7 +194,6 @@ def pmf(tribe_used):  # Multinomial distribution with x = tile ratios, n = sum o
 
 
 def board_creation():
-
     # Fog, neighbor, edge, territory
 
     #   Inserting shape list onto board
@@ -252,7 +257,6 @@ def board_creation():
 
 
 def position_input():
-
     position = -1
 
     while n_tiles >= position > 0:
@@ -285,13 +289,12 @@ def find_adjacent_tiles(rowcol):
 
     for r in range(low_row, upp_row):
         for c in range(low_col, upp_col):
-            adjacent_tiles.append((r,c))
+            adjacent_tiles.append((r, c))
 
     return adjacent_tiles
 
 
 def multi_pmf():
-
     # Finds the coordinates of the tile of interest
     row = 10
     column = 4
@@ -330,12 +333,6 @@ def multi_pmf():
                 relevant_border.append(tile)
 
 
-
-
-
-
-
-
 def main():  # Applies the pmf specific to a tribe and runs the necessary functions before to apply it
     used_tribe = assign_tribe_odds(input_tribe())
     input_tile()
@@ -353,12 +350,4 @@ def assign_tribe_odds(name):
 #   Board creation
 df = pandas.DataFrame(np.full((10, 10), "_"))
 
-#main()
-
-
-test = pandas.DataFrame(np.full((10, 10), "_"))
-
-position = (9,9)
-
-
-find_adjacent_tiles(position)
+main()
