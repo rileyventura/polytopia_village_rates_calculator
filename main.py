@@ -1,6 +1,5 @@
 import pandas
 from scipy.stats import multinomial
-from string import punctuation
 import numpy as np
 
 # Work on vision that you get from mountains
@@ -9,7 +8,6 @@ import numpy as np
 
 file = "/home/jack/Downloads/poly_rates.csv"  # change name for the file directory
 data = pandas.read_csv(file)  # imports the odds of different tribes from a csv
-
 
 
 class tribe:
@@ -38,14 +36,7 @@ class tribe:
         self.mmo = mmo
 
 
-def valid_tile_name(tile):
-    valid_tiles = ["mo", "fo", "ef", "ff", "cf", "gf", "mm", "mof", "fof", "eff", "fff", "cff", "gff", "mmf"]
-    if tile in valid_tiles:
-        return True
-    return False
-
-
-def input_tribe():  # Asks for user input, returns the tribe after data validating
+def ask_tribe():  # Asks for user input, returns the tribe after data validating
     valid_tribes = ["h", "x", "i", "b", "o", "q", "ai", "aq", "v", "k", "c", "z", "l", "e", "y"]
 
     char = "aa"
@@ -56,40 +47,87 @@ def input_tribe():  # Asks for user input, returns the tribe after data validati
     return char.capitalize()
 
 
-def input_tile():  # Asks for user input, returns the tiles inputted and their proportion
+def ask_tech(used_tribe):
+    if used_tribe == "x":
+        organization = input("Do you have organization? y for yes and n for no: ").lower()
+        climbing = True
+    if used_tribe == "i":
+        climbing = input("Do you have climbing? y for yes and n for no: ").lower()
+        organization = True
+    else:
+        organization = input("Do you have organization? y for yes and n for no: ").lower()
+        climbing = input("Do you have climbing? y for yes and n for no: ").lower()
+
+    if organization == "y" or True:
+        organization = True
+    else:
+        organization = False
+    if climbing == "y" or True:
+        climbing = True
+    else:
+        climbing = False
+
+    return organization, climbing
+
+
+def assign_tribe_odds(name):
+    temp = data.loc[:, name].values.transpose().tolist()
+    return tribe(temp[0], temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7], temp[8], temp[9], temp[10],
+                 temp[11], temp[12], temp[13], temp[14], temp[15], temp[16], temp[17], temp[18], temp[19], temp[20])
+
+
+def valid_tile(tile):  # Inputs a string and confirms if it's a legitimate tile name or not
     valid_tiles = ["mo", "fo", "ef", "ff", "cf", "gf", "mm", "mof", "fof", "eff", "fff", "cff", "gff", "mmf"]
-    points = punctuation.replace(",", "")
+    if tile in valid_tiles:
+        return True
+    return False
+
+
+def ask_tiles():  # Asks for a user string that outputs a list of the entered tiles
+
+    while True:
+        tiles = input(
+            "Write the tiles in shortform separated by commas (mo, fo, ef, ff, cf, gf, mm): "
+        ).replace(" ", "").split(",")
+
+        if [i for i in tiles if valid_tile(i)]:
+            break
+
+    return tiles
+
+
+def distribution(tiles):  # Creates a list with the distribution of every kind of tile
+
+    valid_tiles = ["mo", "fo", "ef", "ff", "cf", "gf", "mm", "mof", "fof", "eff", "fff", "cff", "gff", "mmf"]
+    x = 0
+    tile_distribution = []
+    for terrain in valid_tiles:
+        if tiles.count(terrain) != 0:
+            tile_distribution.append(tiles.count(terrain))
+        x += 1
+
+    return tile_distribution
+
+
+def name_distribution(tiles):  # Associates a name to the tile_distribution list
+
+    valid_tiles = ["mo", "fo", "ef", "ff", "cf", "gf", "mm", "mof", "fof", "eff", "fff", "cff", "gff", "mmf"]
+    x = 0
+    names_tile_distribution = []
+    for terrain in valid_tiles:
+        if tiles.count(terrain) != 0:
+            names_tile_distribution.append(terrain)
+        x += 1
+
+    return names_tile_distribution
+
+
+def ask_shape(tiles):  # Asks user for a shape that the resources will be aligned in
+
     digits = "123456789"
 
-    global tile_input_list
-    tile_input_string = "bla"
-    tile_input_list = ["bla"]  # These variables are to quantify what type tiles are being inputted
-
-    global tile_shape
-    tile_shape = []
-    # These check that the shape is ok and matches the length of the list of tiles
-
-    global tile_distribution
-    global tile_distribution_names
-    tile_distribution = []
-    tile_distribution_names = []  # These are the output result
-
-    while any(x in tile_input_string for x in points) or [i for i in tile_input_list if
-                                                          i not in valid_tiles] != [] or len(tile_shape) != n_tiles:
-
-        # While function makes sure that only the "," is separating data and that the data is valid
-
-        tile_input_string = input(
-            "Write the tiles in shortform separated by commas (mo, fo, ef, ff, cf, gf, mm): ").replace(
-            " ", "")
-        tile_input_list = tile_input_string.split(",")
-        x = 0
-        for terrain in valid_tiles:
-            if tile_input_list.count(terrain) != 0:
-                tile_distribution.append(tile_input_list.count(terrain))
-                tile_distribution_names.append(terrain)
-            x += 1
-
+    while True:
+        tile_shape = []
         shape_input_string = input("Write the tile shape clockwise in this format 3L1R2").replace(" ", "").lower()
         direction = "forwards"  # The shape will keep going straight until there is a direction change by a letter
 
@@ -117,38 +155,42 @@ def input_tile():  # Asks for user input, returns the tiles inputted and their p
                     direction = "right"
                 elif direction == "left":
                     direction = "forwards"
-        tile_number()
-        print(tile_shape, n_tiles, tile_distribution)
-        print(any(x in tile_input_string for x in points), [i for i in tile_input_list if
-                                                            i not in valid_tiles] != [], len(tile_shape) != n_tiles)
+        if len(tile_shape) == len(tiles):
+            break
+    return tile_shape
 
 
-def tile_number():
-    global n_tiles
-    n_tiles = 0
-    for i in range(len(tile_distribution)):
-        n_tiles += tile_distribution[i]  # sum of tiles calculated
+def ask_position(tiles):
+    # Asks the user which tile they want to analyze relative to the position of the entered tiles.
+
+    while True:
+        position = int(input("Position of the tile to analyze (starts at 1): "))
+        len_tiles = len(tiles)
+        if 0 < position <= len_tiles:
+            break
+
+    return position
 
 
-def pmf(tribe_used):  # Multinomial distribution with x = tile ratios, n = sum of tiles, p = odds of a tile
-
-    # For the pmf to function, the total p=1,
+def pmf(specific_tiles_distribution, specific_tiles_name_distribution, tribe_used, tiles):
+    # Multinomial distribution with x = tile ratios, n = sum of tiles, p = odds of a tile
+    # For the pmf to function, the total p=1
     # So we have to add the remaining odds in a separate value, hence why append 0
+    specific_tiles_distribution.append(0)
 
-    tile_distribution.append(0)
-
-    tile_number()
     tile_odds_close = []
     tile_odds_far = []
     tile_odds_out = []
-    for element in tile_distribution_names:  # Tile info 1 has the names of the tiles that were inputted
+
+    # Odds of a type of tile appearing next, 2 tiles and out of a city for a specific tribe
+    for element in specific_tiles_name_distribution:
         element_f = element + "f"
         element_o = element + "o"
         tile_odds_close.append(getattr(tribe_used, element))
         tile_odds_far.append(getattr(tribe_used, element_f))
         tile_odds_out.append(getattr(tribe_used, element_o))
-        # Now we have the odds of a type of tile appearing next, 2 tiles and out of a city
 
+    # The remaining probability's goal is to make all the rest that wasn't picked added in the pmf function so that p=1
     remaining_probability_close, remaining_probability_far, remaining_probability_out = 1, 1, 1
 
     for index in range(len(tile_odds_out)):
@@ -159,42 +201,49 @@ def pmf(tribe_used):  # Multinomial distribution with x = tile ratios, n = sum o
     tile_odds_close.append(remaining_probability_close)
     tile_odds_far.append(remaining_probability_far)
     tile_odds_out.append(remaining_probability_out)
+    tile_odds = {"close": tile_odds_close, "far": tile_odds_far, "out": tile_odds_out}
+    # Remaining probability has been assigned to the tile_odds of all distances
 
-    tile_distribution_names.append("Other probabilities")
-    # Now the remaining probability has been added into the table
+    specific_tiles_name_distribution.append("Other probabilities")
+    # Now the remaining probability has been added into the table, this is only so that the user can understand
+    # specific_tiles_name_distribution is not used in the pmf function
 
-    # print("tile names", tile_info[1], "tile proportions", tile_info[0], "odds for a tile", tile_odds_close)
-    # print(multinomial.pmf(x=tile_info[0], n=n_tiles, p=tile_odds_close))
-
-    tile_odds = [tile_odds_close, tile_odds_far, tile_odds_out]
-    print(tile_odds)
     frequency = []
 
-    for element in range(len(tile_odds)):
-        frequency.append(round(multinomial.pmf(x=tile_distribution, n=n_tiles, p=tile_odds[element]) * 100, 2))
+    for element in tile_odds:
+        frequency.append(
+            round(multinomial.pmf(x=specific_tiles_distribution, n=len(tiles), p=tile_odds[element]), 3))
+    print(frequency)
+    odds = {
+        "close": round(frequency[0] / (frequency[1] + frequency[2] + frequency[0]), 3),
+        "far": round(frequency[1] / (frequency[1] + frequency[2] + frequency[0]), 3),
+        "out": round(frequency[2] / (frequency[1] + frequency[2] + frequency[0]), 3)
+    }
+    # pmf formula incorrect for n=1 so this is the simple workaround
+    if len(tiles) == 1:
+        odds["close"] = tile_odds["close"][0]
+        odds["far"] = tile_odds["far"][0]
+        odds["out"] = tile_odds["out"][0]
 
-    odds = [round(frequency[0] / (frequency[1] + frequency[2] + frequency[0]) * 100, 2),
-            round(frequency[1] / (frequency[1] + frequency[2] + frequency[0]) * 100, 2),
-            round(frequency[2] / (frequency[1] + frequency[2] + frequency[0]) * 100, 2)]
-
-    if n_tiles == 1:  # pmf formula incorrect for n=1 so this is the simple workaround
-        odds[0] = tile_odds[0][0]
-        odds[1] = tile_odds[1][0]
-        odds[2] = tile_odds[2][0]
-
-    if remaining_probability_close == 1:  # Makes sure that there is always at least one positive P for the formula to be valid
-        odds[0] = 0
+    # Makes sure that there is always at least one positive P for the formula to be valid
+    if remaining_probability_close == 1:
+        odds["close"] = 0
     if remaining_probability_far == 1:
-        odds[1] = 0
+        odds["far"] = 0
     if remaining_probability_out == 1:
-        odds[2] = 0
-    print(tile_distribution)
-    print(tile_distribution_names)
+        odds["out"] = 0
+
     print(odds)
 
+    return odds
 
-def board_creation():
+
+def add_border_to_board(tile_shape, tiles):
+    # Creates the board and use the tile_shape to assign all tiles on the board
     # Fog, neighbor, edge, territory
+
+    #   Board creation
+    df = pandas.DataFrame(np.full((10, 10), "_"))
 
     #   Inserting shape list onto board
     row, column = 10, 4
@@ -209,19 +258,20 @@ def board_creation():
         elif tile_shape[index] == "left":
             column -= 1
 
-        #   Edge case for the first tile
-        if row == 9:
-            df.iloc[-1, column] = tile_input_list[index]
-        else:
-            df.iloc[row, column] = tile_input_list[index]
+        df.iloc[row, column] = tiles[index]
 
-    # Adding the territory tiles to the board
+    return df
+
+
+def add_territories_to_board(tile_shape, board):
+    # Adding the territory tiles to the board starting at a base row & column and moving through the entire shape_list
 
     base_column = 4
-    base_row = 0
+    base_row = 10
     index = 0
 
-    while tile_input_list[index] in tile_names and index < len(tile_shape) - 1:
+    # Will try to add the "ter" tile on the right of every single square in tiles
+    while index <= len(tile_shape) - 1:
 
         if tile_shape[index] == "forwards":
             base_row -= 1
@@ -232,60 +282,42 @@ def board_creation():
         if tile_shape[index] == "left":
             base_column -= 1
 
-        column = base_column
+        # The +1 skips the border tile to avoid an iteration in the next while function
+        column = base_column + 1
         row = base_row
 
-        column += 1  # Skips the border tile as it in tiles so will skip the while
-
-        border_count = 0
-        for col in range(column):
-            if df.iloc[row, col] in tile_names:
-                border_count += 1
-
-        while column < 10 and df.iloc[row, column] not in tile_names and border_count < 2:
-            df.iloc[row, column] = "ter"
-
+        # A square will become "ter" if the col < 10, if it is not a border, and it's on the same row as a border
+        while column < 10 and not valid_tile(board.iloc[row, column]):
+            board.iloc[row, column] = "ter"
             column += 1
-
-            # Useful for the first time
-        if base_row == -1:
-            base_row = 9
 
         index += 1
 
-    print(df)
+    print(board)
 
 
-def position_input():
-    position = -1
-
-    while n_tiles >= position > 0:
-        position = int(input("Position of the tile to analyze"))
-
-    position -= 1
-
-    return position
-
-
-def find_adjacent_tiles(rowcol):
+def find_adjacent_tiles(row_col):
     adjacent_tiles = []
 
-    if rowcol[1] == 0:
+    if row_col[1] == 0:
         low_col = 0
     else:
-        low_col = rowcol[1] - 1
-    if rowcol[1] == 9:
+        low_col = row_col[1] - 1
+
+    if row_col[1] == 9:
         upp_col = 10
     else:
-        upp_col = rowcol[1] + 2
-    if rowcol[0] == 0:
+        upp_col = row_col[1] + 2
+
+    if row_col[0] == 0:
         low_row = 0
     else:
-        low_row = rowcol[0] - 1
-    if rowcol[0] == 9:
+        low_row = row_col[0] - 1
+
+    if row_col[0] == 9:
         upp_row = 10
     else:
-        upp_row = rowcol[0] + 2
+        upp_row = row_col[0] + 2
 
     for r in range(low_row, upp_row):
         for c in range(low_col, upp_col):
@@ -294,12 +326,12 @@ def find_adjacent_tiles(rowcol):
     return adjacent_tiles
 
 
-def multi_pmf():
+def tile_of_interest_coordinates(tile_shape, studied_position):
     # Finds the coordinates of the tile of interest
     row = 10
     column = 4
 
-    for index in range(len(tile_shape)):
+    for index in range(studied_position):
         if tile_shape[index] == "forwards":
             row -= 1
         elif tile_shape[index] == "right":
@@ -309,45 +341,87 @@ def multi_pmf():
         elif tile_shape[index] == "left":
             column -= 1
 
-    studied_tile = (row, column)
+    return row, column
 
-    adjacent_tiles = find_adjacent_tiles(studied_tile)
 
+def find_relevant_neighbor(board, studied_tile):
     # Finds the relevant neighbors to the tile of studied_tile
 
-    relevant_neighbor = []
+    adjacent_tiles = find_adjacent_tiles(studied_tile)
+    relevant_neighbor = {}
 
     for tile in adjacent_tiles:
-        if df.iloc[tile] == "_":
-            relevant_neighbor.append(tile)
+        if board.iloc[tile] == "_":
+            relevant_neighbor[tile] = []
 
-    # Finds the relevant borders for each neighbor tiles
+    return relevant_neighbor
 
-    relevant_border = []
+
+def find_relevant_border(board, relevant_neighbor):
 
     for neighbor in relevant_neighbor:
+        relevant_border = []
         adjacent_tiles = find_adjacent_tiles(neighbor)
 
         for tile in adjacent_tiles:
-            if df.iloc[tile] in tile_names:
+            if valid_tile(board.iloc[tile]):
                 relevant_border.append(tile)
+
+        relevant_neighbor[neighbor] = relevant_border
+
+    return relevant_neighbor
+
+
+def multi_pmf(tribe_used, relevant_neighbor, board):
+
+    pmf_odds = []
+    for neighbor in relevant_neighbor.values():
+        specific_tiles = []
+
+        for tile in neighbor:
+            specific_tiles.append(board.iloc[tile])
+
+        specific_tiles_distribution = distribution(specific_tiles)
+        specific_tile_name_distribution = name_distribution(specific_tiles)
+
+        pmf_odds.append(pmf(specific_tiles_distribution, specific_tile_name_distribution, tribe_used, specific_tiles))
+
+    return pmf_odds
+
+
+def find_final_odds(pmf_odds):
+    final_odds = {"close": 1, "far": 1, "out": 1}
+
+    for odds in pmf_odds:
+        final_odds["close"] *= (1-odds["close"])
+        final_odds["far"] *= (1-odds["far"])
+        final_odds["out"] *= (1-odds["out"])
+
+    final_odds["close"] = 1 - final_odds["close"]
+    final_odds["far"] = 1 - final_odds["far"]
+    final_odds["out"] = 1 - final_odds["out"]
+
+    return final_odds
 
 
 def main():  # Applies the pmf specific to a tribe and runs the necessary functions before to apply it
-    used_tribe = assign_tribe_odds(input_tribe())
-    input_tile()
+    used_tribe = assign_tribe_odds(ask_tribe())
+    tiles = ask_tiles()
+    tile_shape = ask_shape(tiles)
+    board = add_border_to_board(tile_shape, tiles)
+    add_territories_to_board(tile_shape, board)
 
-    board_creation()
-    pmf(used_tribe)
+    studied_position = ask_position(tiles)
+    studied_tile = tile_of_interest_coordinates(tile_shape, studied_position)
+    # Relevant_neighbor is created in this function
+    relevant_neighbor = find_relevant_neighbor(board,studied_tile)
+    # relevant_neighbor now has every border associated to every neighbor
+    relevant_neighbor = find_relevant_border(board, relevant_neighbor)
 
+    pmf_odds = multi_pmf(used_tribe, relevant_neighbor, board)
 
-def assign_tribe_odds(name):
-    temp = data.loc[:, name].values.transpose().tolist()
-    return tribe(temp[0], temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7], temp[8], temp[9], temp[10],
-                 temp[11], temp[12], temp[13], temp[14], temp[15], temp[16], temp[17], temp[18], temp[19], temp[20])
-
-
-#   Board creation
-df = pandas.DataFrame(np.full((10, 10), "_"))
+    print(find_final_odds(pmf_odds))
 
 main()
+
+#print(multinomial.pmf([1,1,0], 2, [0.385, 0.12, 1-0.385 - 0.12]))
